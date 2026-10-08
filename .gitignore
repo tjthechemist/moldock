@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+docked_*.pdb
+docked_*.pdbqt
+complex_*.pdb
+results_*.csv
