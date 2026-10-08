@@ -217,3 +217,4 @@ python3 -m unittest discover -s tests -v
 ```
 
 All unit tests run in <1 second and validate PDB/PDBQT parsing, metal detection, Vina empirical scoring terms, and end-to-end docking pipelines.
+

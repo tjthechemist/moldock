@@ -54,3 +54,4 @@ def kabsch_rmsd(coords_a: np.ndarray, coords_b: np.ndarray) -> Tuple[float, np.n
     b_aligned = np.dot(b_centered, R.T) + centroid_a
     rmsd = calculate_rmsd(a, b_aligned)
     return rmsd, b_aligned
+

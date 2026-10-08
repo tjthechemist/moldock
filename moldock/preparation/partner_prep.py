@@ -66,3 +66,4 @@ class PartnerPreparer:
             is_surface.append(count <= max_neighbors)
 
         molecule.metadata["is_surface_atom"] = is_surface
+

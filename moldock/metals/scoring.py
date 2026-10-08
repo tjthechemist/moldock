@@ -144,3 +144,4 @@ class MetalCoordinationScorer:
         breakdown.total_score = coord_energy_total + repulsion_total + pol_total
 
         return breakdown
+

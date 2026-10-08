@@ -135,3 +135,4 @@ class InteractionProfiler:
                     )
 
         return interactions
+

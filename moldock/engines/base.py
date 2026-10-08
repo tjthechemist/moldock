@@ -66,3 +66,4 @@ class BaseDockingEngine(ABC):
     def dock(self) -> DockingResult:
         """Execute docking simulation and return poses."""
         pass
+

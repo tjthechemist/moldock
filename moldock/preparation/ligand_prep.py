@@ -142,3 +142,4 @@ class LigandPreparer:
         torsdof = molecule.metadata.get("num_rotatable_bonds", 0)
         PDBQTIO.write_pdbqt(molecule, output_path, torsdof=torsdof, as_rigid=False)
         return output_path
+

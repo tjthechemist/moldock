@@ -19,3 +19,4 @@ class BaseScoringFunction(ABC):
     def score_breakdown(self, receptor: Molecule, ligand: Molecule) -> Dict[str, Any]:
         """Return breakdown of energy components (e.g. Gauss1, Gauss2, H-bond, Metal)."""
         pass
+

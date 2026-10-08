@@ -100,3 +100,4 @@ class ReceptorPreparer:
         else:
             PDBIO.write_pdb(molecule, output_path)
         return output_path
+

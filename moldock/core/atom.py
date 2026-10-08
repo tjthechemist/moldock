@@ -156,3 +156,4 @@ def assign_vina_atom_type(name: str, element: str, res_name: str, charge: float 
         return elem
 
     return elem
+

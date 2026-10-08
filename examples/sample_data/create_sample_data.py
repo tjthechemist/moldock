@@ -121,3 +121,4 @@ if __name__ == "__main__":
     generate_ligand_pdb(os.path.join(outdir, "ligand_inhibitor.pdb"))
     generate_partner_protein_pdb(os.path.join(outdir, "protein_partner.pdb"))
     print("Benchmark PDB files generated successfully.")
+

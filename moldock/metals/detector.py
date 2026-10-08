@@ -114,3 +114,4 @@ class MetalDetector:
             cluster_counter += 1
 
         return metal_centers
+

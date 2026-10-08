@@ -175,3 +175,4 @@ class VinaScoringFunction(BaseScoringFunction):
             "hbond": comp.hbond,
             "torsion_penalty": comp.torsion_penalty,
         }
+

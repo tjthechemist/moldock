@@ -82,3 +82,4 @@ def compute_pairwise_distances(coords_a: np.ndarray, coords_b: np.ndarray) -> np
     # Using Euclidean distance with broadcasting
     diff = coords_a[:, np.newaxis, :] - coords_b[np.newaxis, :, :]
     return np.sqrt(np.sum(diff * diff, axis=-1))
+

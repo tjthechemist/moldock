@@ -32,3 +32,4 @@ moldock = "moldock.cli.main:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["moldock*"]
+

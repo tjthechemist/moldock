@@ -161,3 +161,4 @@ class DockingConfig:
     cpu_threads: int = 4
     rigid_body_rotations: int = 360  # For protein-protein rotational sampling
     rigid_body_translations: int = 50  # For protein-protein translational sampling
+

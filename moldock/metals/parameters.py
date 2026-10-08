@@ -152,3 +152,4 @@ def get_metal_parameters(symbol: str) -> MetalProperties:
         epsilon=0.20,
         sigma=2.10,
     )
+

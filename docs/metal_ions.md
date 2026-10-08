@@ -52,3 +52,4 @@ calibrated for each metal ion (e.g. $C_4 = 115.0$ for $\text{Zn}^{2+}$, $95.0$ f
 ### 2.4 Valency & Multi-Metal Clustering
 - **Valency awareness**: If a metal ion is already coordinated by 3 histidine residues in a catalytic site (preferred coordination number 4), its remaining valency is 1. If a ligand attempts to coordinate with more donor atoms than available valency, diminishing returns/penalty is applied.
 - **Multi-metal sites**: For dinuclear active sites (e.g. di-zinc or di-iron enzymes within 4.5 Å of each other), `MetalDetector` groups them into a cluster, allowing ligands to bridge between both metals.
+

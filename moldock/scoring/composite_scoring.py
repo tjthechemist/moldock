@@ -109,3 +109,4 @@ class CompositeScoringFunction(BaseScoringFunction):
             "per_metal_scores": metal_breakdown.per_metal_scores,
             "electrostatic_score": elec_score,
         }
+

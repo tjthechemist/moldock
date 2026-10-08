@@ -78,3 +78,4 @@
 ### 2.5 `moldock.analysis`
 - **`InteractionProfiler`** ([`interactions.py`](file:///home/tawatchai/Desktop/Projects/molecular-docking-python/moldock/analysis/interactions.py)): Analyzes docked complexes for metal coordination, hydrogen bonds, salt bridges, and hydrophobic contacts.
 - **`DockingReporter`** ([`reporter.py`](file:///home/tawatchai/Desktop/Projects/molecular-docking-python/moldock/analysis/reporter.py)): Generates Vina-style terminal tables, CSV exports, and merged complex PDB files.
+

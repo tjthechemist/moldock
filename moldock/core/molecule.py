@@ -102,3 +102,4 @@ class Molecule:
         new_mol = Molecule(name=self.name, atoms=new_atoms)
         new_mol.metadata = dict(self.metadata)
         return new_mol
+
