@@ -96,7 +96,22 @@ class Atom:
         elem_key = self.element.upper()
         return VDW_RADII.get(type_key, VDW_RADII.get(elem_key, 1.70))
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Atom):
+            return False
+        return (
+            self.index == other.index
+            and self.name == other.name
+            and self.res_name == other.res_name
+            and self.res_seq == other.res_seq
+            and self.chain_id == other.chain_id
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.index, self.name, self.res_name, self.res_seq, self.chain_id))
+
     def copy(self) -> "Atom":
+
         return Atom(
             index=self.index,
             name=self.name,

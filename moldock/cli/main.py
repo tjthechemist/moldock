@@ -17,6 +17,7 @@ from moldock.engines.protein_ligand import ProteinLigandEngine
 from moldock.engines.protein_protein import ProteinProteinEngine
 from moldock.analysis.reporter import DockingReporter
 from moldock.analysis.interactions import InteractionProfiler
+from moldock.analysis.visualizer import InteractionVisualizer
 from moldock.scoring.composite_scoring import CompositeScoringFunction
 
 
@@ -34,6 +35,8 @@ def setup_parser() -> argparse.ArgumentParser:
     pl_parser.add_argument("--out", "-o", default="docked_ligand.pdbqt", help="Output poses file (.pdbqt or .pdb)")
     pl_parser.add_argument("--complex-out", default=None, help="Save top docked pose merged with receptor (.pdb)")
     pl_parser.add_argument("--csv-out", default=None, help="Save score breakdown table to CSV")
+    pl_parser.add_argument("--plot-out", default=None, help="Save interaction diagram to PNG image")
+
 
     # Grid box parameters
     pl_parser.add_argument("--center-x", type=float, default=None, help="Grid box center X")
@@ -57,6 +60,7 @@ def setup_parser() -> argparse.ArgumentParser:
     pp_parser.add_argument("--out", "-o", default="docked_partner.pdb", help="Output poses file (.pdb)")
     pp_parser.add_argument("--complex-out", default=None, help="Save top docked complex merged into single PDB")
     pp_parser.add_argument("--csv-out", default=None, help="Save score breakdown table to CSV")
+    pp_parser.add_argument("--plot-out", default=None, help="Save interface interaction diagram to PNG image")
 
     # Grid box parameters for interface
     pp_parser.add_argument("--center-x", type=float, default=None, help="Interface search center X")
@@ -84,7 +88,15 @@ def setup_parser() -> argparse.ArgumentParser:
     sc_parser.add_argument("--receptor", "-r", required=True, help="Receptor PDB file")
     sc_parser.add_argument("--query", "-q", required=True, help="Ligand or Partner PDB/PDBQT file")
 
+    # 5. visualize
+    vis_parser = subparsers.add_parser("visualize", help="Render PNG interaction diagram of a complex")
+    vis_parser.add_argument("--receptor", "-r", required=True, help="Receptor PDB file")
+    vis_parser.add_argument("--query", "-q", required=True, help="Docked Ligand or Partner PDB/PDBQT file")
+    vis_parser.add_argument("--out", "-o", default="interactions.png", help="Output PNG file path")
+    vis_parser.add_argument("--mode", choices=["2d", "3d"], default="2d", help="Visualization mode (2d network or 3d pocket)")
+
     return parser
+
 
 
 def run_detect_metals(args) -> int:
@@ -181,7 +193,22 @@ def run_pl_dock(args) -> int:
         DockingReporter.export_csv(res, args.csv_out)
         print(f">> CSV summary written to: {args.csv_out}")
 
+    if args.plot_out and res.poses:
+        top_mol = res.poses[0].apply_to_molecule(lig)
+        profiler = InteractionProfiler()
+        contacts = profiler.profile_interactions(rec, top_mol)
+        InteractionVisualizer.render_interaction_diagram(
+            receptor=rec,
+            query=top_mol,
+            contacts=contacts,
+            output_png_path=args.plot_out,
+            title="Protein-Ligand Interaction Map",
+            score_info={"total_score": res.poses[0].score, "metal_score": res.poses[0].score_breakdown.get("metal_score", 0.0)},
+        )
+        print(f">> Interaction diagram PNG saved to: {args.plot_out}")
+
     return 0
+
 
 
 def run_pp_dock(args) -> int:
@@ -242,6 +269,20 @@ def run_pp_dock(args) -> int:
         DockingReporter.export_csv(res, args.csv_out)
         print(f">> CSV summary written to: {args.csv_out}")
 
+    if args.plot_out and res.poses:
+        top_mol = res.poses[0].apply_to_molecule(partner)
+        profiler = InteractionProfiler()
+        contacts = profiler.profile_interactions(rec, top_mol)
+        InteractionVisualizer.render_interaction_diagram(
+            receptor=rec,
+            query=top_mol,
+            contacts=contacts,
+            output_png_path=args.plot_out,
+            title="Protein-Protein Interface Interaction Map",
+            score_info={"total_score": res.poses[0].score, "metal_score": res.poses[0].score_breakdown.get("metal_score", 0.0)},
+        )
+        print(f">> Interface interaction diagram PNG saved to: {args.plot_out}")
+
     return 0
 
 
@@ -277,6 +318,45 @@ def run_score(args) -> int:
     return 0
 
 
+def run_visualize(args) -> int:
+    rec_prep = ReceptorPreparer()
+    rec, centers = rec_prep.prepare_from_pdb(args.receptor)
+
+    ext = os.path.splitext(args.query)[1].lower()
+    if ext == ".pdbqt":
+        query = PDBQTIO.read_pdbqt(args.query)
+    else:
+        query = PDBIO.read_pdb(args.query)
+
+    profiler = InteractionProfiler()
+    contacts = profiler.profile_interactions(rec, query)
+
+    scorer = CompositeScoringFunction(metal_centers=centers)
+    bd = scorer.score_breakdown(rec, query)
+
+    if args.mode == "3d":
+        InteractionVisualizer.render_3d_pocket_projection(
+            receptor=rec,
+            query=query,
+            contacts=contacts,
+            metal_centers=centers,
+            output_png_path=args.out,
+            title="3D Binding Pocket & Metal Coordination",
+        )
+    else:
+        InteractionVisualizer.render_interaction_diagram(
+            receptor=rec,
+            query=query,
+            contacts=contacts,
+            output_png_path=args.out,
+            title="Molecular Docking Interaction Map",
+            score_info=bd,
+        )
+
+    print(f">> Interaction visualization saved to: {args.out} (Found {len(contacts)} contacts)")
+    return 0
+
+
 def main():
     parser = setup_parser()
     if len(sys.argv) == 1:
@@ -292,9 +372,12 @@ def main():
         sys.exit(run_detect_metals(args))
     elif args.command == "score":
         sys.exit(run_score(args))
+    elif args.command == "visualize":
+        sys.exit(run_visualize(args))
     else:
         parser.print_help()
         sys.exit(1)
+
 
 
 if __name__ == "__main__":

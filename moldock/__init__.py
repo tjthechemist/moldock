@@ -33,6 +33,7 @@ from moldock.engines.base import DockingPose, DockingResult
 from moldock.analysis.interactions import InteractionProfiler
 from moldock.analysis.rmsd import calculate_rmsd, kabsch_rmsd
 from moldock.analysis.reporter import DockingReporter
+from moldock.analysis.visualizer import InteractionVisualizer
 
 __version__ = "0.1.0"
 
@@ -67,5 +68,7 @@ __all__ = [
     "calculate_rmsd",
     "kabsch_rmsd",
     "DockingReporter",
+    "InteractionVisualizer",
 ]
+
 

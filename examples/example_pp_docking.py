@@ -15,7 +15,9 @@ from moldock import (
     ProteinProteinEngine,
     DockingReporter,
     InteractionProfiler,
+    InteractionVisualizer,
 )
+
 
 def run_example():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -70,7 +72,31 @@ def run_example():
             print(f"  [{c.interaction_type.upper()}] Rec: {c.receptor_res}{c.receptor_res_seq}:{c.receptor_atom_name} "
                   f"<---> Partner: {c.query_atom_name} | Dist: {c.distance:.2f} Å")
 
+        # 7. Render 2D Interface Diagram and 3D Interface Complex PNGs
+        out_2d = os.path.join(base_dir, "pp_interface_2d.png")
+        out_3d = os.path.join(base_dir, "pp_interface_3d.png")
+        InteractionVisualizer.render_interaction_diagram(
+            receptor=receptor,
+            query=docked_partner,
+            contacts=contacts,
+            output_png_path=out_2d,
+            title="Protein-Protein Interface Interaction Map",
+            score_info={"total_score": top_pose.score, "metal_score": top_pose.score_breakdown.get("metal_score", 0.0)},
+        )
+        InteractionVisualizer.render_3d_pocket_projection(
+            receptor=receptor,
+            query=docked_partner,
+            contacts=contacts,
+            metal_centers=metal_centers,
+            output_png_path=out_3d,
+            title="3D Macromolecular Interface & Metal Coordination",
+        )
+        print(f"\nVisual results exported:")
+        print(f"  - 2D Interface Diagram: {out_2d}")
+        print(f"  - 3D Interface Complex: {out_3d}")
+
     print("\nProtein-Protein docking completed successfully.")
+
 
 if __name__ == "__main__":
     run_example()

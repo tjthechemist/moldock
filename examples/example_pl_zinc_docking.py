@@ -16,7 +16,9 @@ from moldock import (
     ProteinLigandEngine,
     DockingReporter,
     InteractionProfiler,
+    InteractionVisualizer,
 )
+
 
 def run_example():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +74,31 @@ def run_example():
             print(f"  [{c.interaction_type.upper()}] Rec: {c.receptor_res}{c.receptor_res_seq} ({c.receptor_atom_name}) "
                   f"<---> Lig: {c.query_atom_name} ({c.query_element}) | Distance: {c.distance:.2f} Å")
 
+        # 7. Render 2D Interaction Diagram and 3D Active Site PNGs
+        out_2d = os.path.join(base_dir, "pl_interaction_2d.png")
+        out_3d = os.path.join(base_dir, "pl_binding_pocket_3d.png")
+        InteractionVisualizer.render_interaction_diagram(
+            receptor=receptor,
+            query=docked_lig,
+            contacts=contacts,
+            output_png_path=out_2d,
+            title="Protein-Ligand Interaction Map (Zn2+ Active Site)",
+            score_info={"total_score": top_pose.score, "metal_score": top_pose.score_breakdown.get("metal_score", 0.0)},
+        )
+        InteractionVisualizer.render_3d_pocket_projection(
+            receptor=receptor,
+            query=docked_lig,
+            contacts=contacts,
+            metal_centers=metal_centers,
+            output_png_path=out_3d,
+            title="3D Active Site & Metal Coordination",
+        )
+        print(f"\nVisual results exported:")
+        print(f"  - 2D Interaction Diagram: {out_2d}")
+        print(f"  - 3D Binding Pocket:      {out_3d}")
+
     print("\nDocking completed successfully.")
+
 
 if __name__ == "__main__":
     run_example()

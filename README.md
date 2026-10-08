@@ -100,8 +100,8 @@ Inspect a receptor PDB for metal cofactors and their coordinating residues:
 moldock detect-metals --receptor examples/sample_data/receptor_zinc.pdb
 ```
 
-### 2. Protein-Ligand Docking
-Dock a small molecule ligand against a metalloprotein, auto-centering on the zinc ion:
+### 2. Protein-Ligand Docking (with PNG Interaction Diagram)
+Dock a small molecule ligand against a metalloprotein, auto-centering on the zinc ion, and export a PNG interaction diagram:
 ```bash
 moldock pl-dock \
   --receptor examples/sample_data/receptor_zinc.pdb \
@@ -111,10 +111,11 @@ moldock pl-dock \
   --num-modes 9 \
   --out docked_poses.pdbqt \
   --complex-out complex.pdb \
-  --csv-out results.csv
+  --csv-out results.csv \
+  --plot-out pl_interaction_map.png
 ```
 
-### 3. Protein-Protein Docking
+### 3. Protein-Protein Docking (with PNG Interface Diagram)
 Dock a partner protein against a receptor directly from PDB files:
 ```bash
 moldock pp-dock \
@@ -123,7 +124,8 @@ moldock pp-dock \
   --rotations 120 \
   --translations 40 \
   --out docked_partner.pdb \
-  --complex-out complex_pp.pdb
+  --complex-out complex_pp.pdb \
+  --plot-out pp_interface_map.png
 ```
 
 ### 4. Score an Existing Complex
@@ -133,6 +135,25 @@ moldock score \
   --receptor examples/sample_data/receptor_zinc.pdb \
   --query docked_poses.pdbqt
 ```
+
+### 5. Render 2D / 3D Visual Results to PNG
+Render a 2D interaction network or 3D active site projection from any docked pose or complex:
+```bash
+# 2D Interaction Diagram (showing H-bonds, metal bonds, distances)
+moldock visualize \
+  --receptor examples/sample_data/receptor_zinc.pdb \
+  --query docked_poses.pdbqt \
+  --mode 2d \
+  --out interaction_2d.png
+
+# 3D Active Site & Metal Coordination Pocket Projection
+moldock visualize \
+  --receptor examples/sample_data/receptor_zinc.pdb \
+  --query docked_poses.pdbqt \
+  --mode 3d \
+  --out binding_pocket_3d.png
+```
+
 
 ---
 
