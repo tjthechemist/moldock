@@ -1,0 +1,10 @@
+# Core dependency (Zero external C++ requirements needed for pure-Python fallback)
+numpy>=1.20.0
+
+# Optional accelerated & specialized docking libraries
+# biopython>=1.80
+# scipy>=1.7.0
+# vina>=1.2.3
+# meeko>=0.4.0
+# rdkit>=2022.9.1
+# pytest>=7.0.0
