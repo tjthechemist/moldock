@@ -24,7 +24,7 @@
 ## Directory Structure
 
 ```
-molecular-docking-python/
+moldock/
 ├── pyproject.toml              # Build & dependency metadata
 ├── setup.py                    # Package installer
 ├── requirements.txt            # Core dependencies (numpy)
