@@ -10,6 +10,7 @@ import numpy as np
 from moldock.core.atom import Atom, assign_vina_atom_type
 from moldock.core.molecule import Molecule
 from moldock.core.pdb_io import PDBIO, PDBQTIO
+from moldock.core.sdf_io import SDFIO
 
 
 class LigandPreparer:
@@ -103,16 +104,32 @@ class LigandPreparer:
 
     @classmethod
     def prepare_ligand(cls, filepath: str) -> Molecule:
-        """
-        Load ligand from file (.pdb, .pdbqt), detect rotatable bonds, and annotate metadata.
+        """Load a ligand from file, detect rotatable bonds, and annotate metadata.
+
+        Supported formats:
+            - ``.sdf`` / ``.mol``  — MDL SDF/MOL V2000 and V3000 (first record used)
+            - ``.pdbqt``           — AutoDock PDBQT (charges and types already set)
+            - ``.pdb``             — Standard PDB HETATM records (fallback)
+
+        For SDF/MOL files the explicit bond table from the connection table is
+        used directly, which gives more accurate rotatable-bond detection than
+        the distance-heuristic used for PDB files.
         """
         ext = os.path.splitext(filepath)[1].lower()
-        if ext == ".pdbqt":
+
+        if ext in (".sdf", ".mol"):
+            # SDFIO.read_sdf returns a list; take the first record
+            mols = SDFIO.read_sdf(filepath, name="Ligand")
+            mol = mols[0]
+            # Use explicit bond table if present, otherwise infer
+            bonds = mol.metadata.get("bonds") or cls.infer_bonds(mol.atoms)
+        elif ext == ".pdbqt":
             mol = PDBQTIO.read_pdbqt(filepath, name="Ligand")
+            bonds = cls.infer_bonds(mol.atoms)
         else:
             mol = PDBIO.read_pdb(filepath, name="Ligand")
+            bonds = cls.infer_bonds(mol.atoms)
 
-        bonds = cls.infer_bonds(mol.atoms)
         rot_bonds = cls.identify_rotatable_bonds(mol.atoms, bonds)
 
         mol.metadata["bonds"] = bonds
@@ -135,6 +152,49 @@ class LigandPreparer:
                     a.charge = +0.15
 
         return mol
+
+    @classmethod
+    def prepare_from_sdf_batch(cls, filepath: str) -> List[Molecule]:
+        """Load *all* molecules from a multi-molecule SDF file and prepare each.
+
+        Useful for virtual screening: one call processes every record in the
+        SDF and returns a list of dock-ready :class:`~moldock.core.molecule.Molecule`
+        objects.
+
+        Parameters
+        ----------
+        filepath:
+            Path to a ``.sdf`` file that may contain multiple ``$$$$``-delimited
+            records.
+
+        Returns
+        -------
+        List[Molecule]
+            Fully prepared molecules (rotatable bonds, charges, Vina atom types).
+        """
+        all_mols = SDFIO.read_sdf(filepath)
+        prepared: List[Molecule] = []
+        for mol in all_mols:
+            bonds = mol.metadata.get("bonds") or cls.infer_bonds(mol.atoms)
+            rot_bonds = cls.identify_rotatable_bonds(mol.atoms, bonds)
+            mol.metadata["bonds"] = bonds
+            mol.metadata["rotatable_bonds"] = rot_bonds
+            mol.metadata["num_rotatable_bonds"] = len(rot_bonds)
+            for a in mol.atoms:
+                elem = a.element.upper()
+                if abs(a.charge) < 1e-4:
+                    if elem == "O":
+                        a.charge = -0.35
+                    elif elem == "N":
+                        a.charge = -0.25
+                    elif elem == "S":
+                        a.charge = -0.15
+                    elif elem in ("F", "CL"):
+                        a.charge = -0.20
+                    elif elem == "H":
+                        a.charge = +0.15
+            prepared.append(mol)
+        return prepared
 
     @staticmethod
     def save_ligand_pdbqt(molecule: Molecule, output_path: str) -> str:

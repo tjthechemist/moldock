@@ -35,7 +35,11 @@ from moldock.analysis.rmsd import calculate_rmsd, kabsch_rmsd
 from moldock.analysis.reporter import DockingReporter
 from moldock.analysis.visualizer import InteractionVisualizer
 
-__version__ = "0.1.0"
+from moldock.core.sdf_io import SDFIO
+from moldock.screening.virtual_screener import VirtualScreener, ScreeningResult, ScreeningCampaign
+from moldock.screening.screening_report import ScreeningReporter
+
+__version__ = "0.2.0"
 
 __all__ = [
     "Atom",
@@ -69,6 +73,11 @@ __all__ = [
     "kabsch_rmsd",
     "DockingReporter",
     "InteractionVisualizer",
+    "SDFIO",
+    "VirtualScreener",
+    "ScreeningResult",
+    "ScreeningCampaign",
+    "ScreeningReporter",
 ]
 
 
