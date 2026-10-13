@@ -81,7 +81,7 @@ molecular-docking-python/
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/molecular-docking-python.git
+git clone https://github.com/tjthechemist/moldock.git
 cd molecular-docking-python
 
 # Install in editable mode
