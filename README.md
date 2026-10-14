@@ -1,23 +1,27 @@
-# MolDock: Python Molecular Docking Framework
+# MolDock: Python Molecular Docking & Virtual Screening Framework
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python: 3.9+](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 
-**MolDock** is a modular, high-performance Python framework for molecular docking. It provides:
+**MolDock** is a modular, high-performance molecular docking and virtual screening framework implemented in pure Python and NumPy. It requires **zero compiled external binaries** and provides:
+
 1. **Protein-Ligand Docking**: Global Monte Carlo Simulated Annealing with torsional flexibility.
-2. **Protein-Protein Docking (PPD)**: Macromolecular rigid-body orientation exploration from PDB files.
-3. **AutoDock Vina Scoring**: Vectorized implementation of the empirical AutoDock Vina scoring function (Gauss1, Gauss2, Repulsion, Hydrophobic, Hydrogen bonding, torsion penalties).
-4. **Multi-Metal Co-factor Coordination**: Explicit support for catalytic and structural metal ions ($\text{Zn}^{2+}, \text{Mg}^{2+}, \text{Ca}^{2+}, \text{Mn}^{2+}, \text{Fe}^{2+/3+}, \text{Cu}^{2+}, \text{Co}^{2+}, \text{Ni}^{2+}$) using coordination wells and 12-6-4 polarization potentials.
+2. **Virtual Screening**: High-throughput multi-ligand library screening (multi-molecule `.sdf`, directories) with multi-threading, ranking, and publication-ready dashboard generation.
+3. **Protein-Protein Docking (PPD)**: Macromolecular rigid-body $SO(3)$ surface search directly from PDB structures.
+4. **AutoDock Vina Empirical Scoring**: Native vectorized implementation of Vina scoring potentials (Gauss1, Gauss2, Repulsion, Hydrophobic, Hydrogen bonding, and torsion count penalty).
+5. **Multi-Metal Co-factor Coordination**: Explicit parameterization and scoring for catalytic and structural metal ions ($\text{Zn}^{2+}, \text{Mg}^{2+}, \text{Ca}^{2+}, \text{Mn}^{2+}, \text{Fe}^{2+/3+}, \text{Cu}^{2+}, \text{Co}^{2+}, \text{Ni}^{2+}$, etc.) using coordination wells and 12-6-4 polarization potentials.
+6. **2D & 3D Visual Analysis**: Automatic PNG generation featuring **complete 2D ligand chemical structures** with highlighted contact sites, distance badges, and 3D orthographic active-site pocket projections.
 
 ---
 
 ## Key Features
 
-- **Zero Heavy Binary Dependencies**: Native pure-Python/NumPy implementation works out of the box with zero external compilation needed.
-- **Metal Co-factor Retention & Valency**: Automatically scans receptor PDB files for metal ions, maps coordinating protein residues, assigns charges, and scores metal-ligand coordinate bonds.
-- **AutoDock Vina Compatibility**: Full support for `.pdbqt` and `.pdb` formats, compatible with standard AutoDock Vina workflows and poses.
-- **Protein-Protein Docking**: Load receptor and partner proteins directly from PDB files, perform 6D $SO(3)$ surface sampling, and evaluate interfaces using Vina potentials.
-- **CLI & Python API**: Intuitive command-line interface (`moldock`) alongside a clean Python API.
+- **Zero Heavy Binary Dependencies**: Pure Python and NumPy; runs out of the box on Linux, macOS, and Windows without compiling C/C++ binaries.
+- **Full SDF & PDBQT Support**: Native reader and writer for MDL `.sdf` / `.mol` (V2000 & V3000) with formal charges, bond orders, and property tags, alongside standard `.pdb` and `.pdbqt` formats.
+- **Complete Ligand 2D Depictions**: Unlike tools that show only disconnected contacting atoms, MolDock's 2D interaction visualizer renders the full chemical graph (all atoms, bonds, aromatic rings) and rings the interacting atoms in gold.
+- **High-Throughput Virtual Screening**: Dock libraries of compounds in parallel, filter with score cutoffs, and export ranked CSVs, multi-model SDF poses, and PNG distribution dashboards.
+- **Metal Co-factor Valency & Retention**: Automatically detects coordination spheres of metal cofactors in receptor PDBs, preserves catalytic ions, and computes coordination energy.
+- **CLI & Python API**: Unified command-line interface (`moldock`) and clean modular Python classes.
 
 ---
 
@@ -27,17 +31,18 @@
 moldock/
 ├── pyproject.toml              # Build & dependency metadata
 ├── setup.py                    # Package installer
-├── requirements.txt            # Core dependencies (numpy)
+├── requirements.txt            # Core dependencies (numpy, pillow)
 ├── README.md                   # Project overview & documentation
 ├── docs/                       # Technical architecture & math formulation
 │   ├── architecture.md         # System design & module breakdown
 │   └── metal_ions.md           # Metal coordination physics & 12-6-4 potentials
 ├── moldock/                    # Main Python package
-│   ├── __init__.py             # Top-level API imports
-│   ├── core/                   # Core representations
+│   ├── __init__.py             # Top-level exports
+│   ├── core/                   # Core molecular representations & I/O
 │   │   ├── atom.py             # Atom class, VdW radii, AutoDock atom types
 │   │   ├── molecule.py         # Molecule container & 3D transformations
 │   │   ├── pdb_io.py           # PDB & PDBQT parser/writer
+│   │   ├── sdf_io.py           # Pure-Python SDF/MOL (V2000/V3000) parser/writer
 │   │   ├── grid.py             # Search grid & spatial partitioning
 │   │   └── config.py           # DockingConfig, GridBox, MetalConfig
 │   ├── metals/                 # Metal co-factor subsystem
@@ -50,19 +55,25 @@ moldock/
 │   │   ├── composite_scoring.py# Vina + Metal + Electrostatics scorer
 │   │   └── external_vina.py    # Wrapper for official Vina library/binary
 │   ├── preparation/            # Structure preparation
-│   │   ├── receptor_prep.py    # Receptor cleaning, metal retention, PDBQT
-│   │   ├── ligand_prep.py      # Ligand rotatable bond detection & charges
+│   │   ├── receptor_prep.py    # Receptor cleaning, metal retention, typing
+│   │   ├── ligand_prep.py      # Ligand rotatable bond detection & batch prep
 │   │   └── partner_prep.py     # Protein partner preparation for PPD
 │   ├── engines/                # Docking search algorithms
 │   │   ├── base.py             # DockingPose, DockingResult, BaseDockingEngine
 │   │   ├── protein_ligand.py   # MC simulated annealing & torsion search
 │   │   └── protein_protein.py  # 6D SO(3) rigid-body exploration & refinement
-│   ├── analysis/               # Results analysis & profiling
-│   │   ├── interactions.py     # Hydrogen bonds, salt bridges, metal bonds
+│   ├── screening/              # Virtual screening subsystem
+│   │   ├── virtual_screener.py # Multi-threaded library screening engine
+│   │   └── screening_report.py # Leaderboard tables, CSV, SDF & PNG dashboard
+│   ├── analysis/               # Results analysis & visualization
+│   │   ├── interactions.py     # Profiler for H-bonds, salt bridges, metal bonds
+│   │   ├── bond_orders.py      # Bond order and aromaticity perception
+│   │   ├── ligand_layout.py    # 2D planar chemical layout algorithms
+│   │   ├── visualizer.py       # 2D complete-ligand maps & 3D pocket projections
 │   │   ├── rmsd.py             # RMSD & Kabsch superposition
 │   │   └── reporter.py         # Tables, CSV exports, complex PDBs
 │   └── cli/                    # Command-line interface
-│       └── main.py             # Entry points for pl-dock, pp-dock, detect-metals
+│       └── main.py             # CLI entry points (pl-dock, screen, pp-dock, etc.)
 ├── examples/                   # Runnable examples
 │   ├── example_pl_zinc_docking.py  # Protein-ligand docking with Zn2+
 │   ├── example_pp_docking.py       # Protein-protein docking with Vina score
@@ -72,7 +83,10 @@ moldock/
     ├── test_metal_detector.py  # Metal cofactor detection tests
     ├── test_vina_scoring.py    # Vina empirical scoring tests
     ├── test_protein_ligand.py  # Protein-ligand docking tests
-    └── test_protein_protein.py # Protein-protein docking tests
+    ├── test_protein_protein.py # Protein-protein docking tests
+    ├── test_bond_orders.py     # Bond perception tests
+    ├── test_ligand_layout.py   # 2D layout tests
+    └── test_visualizer.py      # Visualizer rendering tests
 ```
 
 ---
@@ -88,24 +102,24 @@ cd moldock
 pip install -e .
 ```
 
-*Requirements:* Python 3.9+ and `numpy>=1.20.0`.
+*Requirements:* Python 3.9+ with `numpy>=1.20.0` and `pillow>=9.0.0`.
 
 ---
 
 ## Command-Line Usage
 
 ### 1. Detect Metal Co-factors
-Inspect a receptor PDB for metal cofactors and their coordinating residues:
+Inspect a receptor PDB for metal cofactors and their coordination spheres:
 ```bash
 moldock detect-metals --receptor examples/sample_data/receptor_zinc.pdb
 ```
 
-### 2. Protein-Ligand Docking (with PNG Interaction Diagram)
-Dock a small molecule ligand against a metalloprotein, auto-centering on the zinc ion, and export a PNG interaction diagram:
+### 2. Protein-Ligand Docking (SDF or PDB/PDBQT)
+Dock a small molecule (from `.sdf`, `.mol`, `.pdbqt`, or `.pdb`) against a metalloprotein, auto-centering on the zinc ion, and render a complete 2D interaction diagram:
 ```bash
 moldock pl-dock \
   --receptor examples/sample_data/receptor_zinc.pdb \
-  --ligand examples/sample_data/ligand_inhibitor.pdb \
+  --ligand ligand.sdf \
   --center-on-metal \
   --exhaustiveness 8 \
   --num-modes 9 \
@@ -115,7 +129,24 @@ moldock pl-dock \
   --plot-out pl_interaction_map.png
 ```
 
-### 3. Protein-Protein Docking (with PNG Interface Diagram)
+### 3. Virtual Screening (Multiple Ligands)
+Screen an entire compound library (multi-molecule `.sdf` or directory of ligand files) against a target receptor in parallel:
+```bash
+moldock screen \
+  --receptor examples/sample_data/receptor_zinc.pdb \
+  --library compound_library.sdf \
+  --out-dir screening_results/ \
+  --center-on-metal \
+  --workers 4 \
+  --top-n 20 \
+  --score-cutoff -5.0
+```
+This automatically produces:
+- `screening_results.csv`: Complete ranked table of all docked ligands with energy breakdown.
+- `top_hits.sdf`: Docked 3D conformations of top hits with embedded `MOLDOCK_SCORE` metadata tags.
+- `dashboard.png`: Multi-panel PNG dashboard with score distributions, hit leaderboards, and cumulative affinity curves.
+
+### 4. Protein-Protein Docking
 Dock a partner protein against a receptor directly from PDB files:
 ```bash
 moldock pp-dock \
@@ -128,25 +159,24 @@ moldock pp-dock \
   --plot-out pp_interface_map.png
 ```
 
-### 4. Score an Existing Complex
-Evaluate the AutoDock Vina score + metal coordination breakdown of a complex:
+### 5. Score an Existing Complex
+Evaluate the AutoDock Vina score + metal coordination breakdown of any complex:
 ```bash
 moldock score \
   --receptor examples/sample_data/receptor_zinc.pdb \
   --query docked_poses.pdbqt
 ```
 
-### 5. Render 2D / 3D Visual Results to PNG
-Render a 2D interaction network or 3D active site projection from any docked pose or complex:
+### 6. Render 2D / 3D Visual Results to PNG
 ```bash
-# 2D Interaction Diagram (showing H-bonds, metal bonds, distances)
+# 2D Interaction Diagram (complete ligand structure + receptor contact nodes)
 moldock visualize \
   --receptor examples/sample_data/receptor_zinc.pdb \
   --query docked_poses.pdbqt \
   --mode 2d \
   --out interaction_2d.png
 
-# 3D Active Site & Metal Coordination Pocket Projection
+# 3D Binding Pocket & Metal Coordination Projection
 moldock visualize \
   --receptor examples/sample_data/receptor_zinc.pdb \
   --query docked_poses.pdbqt \
@@ -154,12 +184,11 @@ moldock visualize \
   --out binding_pocket_3d.png
 ```
 
-
 ---
 
 ## Python API Usage
 
-### Protein-Ligand Docking with Metal Cofactor
+### Protein-Ligand Docking with SDF Ligand & 2D Interaction Diagram
 
 ```python
 import numpy as np
@@ -172,6 +201,7 @@ from moldock import (
     ProteinLigandEngine,
     DockingReporter,
     InteractionProfiler,
+    InteractionVisualizer,
 )
 
 # 1. Prepare Receptor and detect metal centers
@@ -179,8 +209,8 @@ metal_config = MetalConfig(allowed_metals=["ZN", "MG", "CA"])
 rec_preparer = ReceptorPreparer(metal_config=metal_config)
 receptor, metal_centers = rec_preparer.prepare_from_pdb("receptor.pdb")
 
-# 2. Prepare Ligand (identifies torsions and Lewis donors)
-ligand = LigandPreparer.prepare_ligand("ligand.pdb")
+# 2. Prepare Ligand (.sdf, .mol, .pdb, or .pdbqt)
+ligand = LigandPreparer.prepare_ligand("inhibitor.sdf")
 
 # 3. Auto-center search grid on metal cofactor
 metal_coords = np.array([mc.metal_atom.coord for mc in metal_centers])
@@ -195,12 +225,46 @@ result = engine.dock()
 print(DockingReporter.generate_table(result))
 result.export_poses_pdbqt("docked_poses.pdbqt")
 
-# 6. Profile intermolecular interactions
+# 6. Profile intermolecular interactions and render diagram
 top_pose = result.get_top_pose()
 docked_lig = top_pose.apply_to_molecule(ligand)
+
 contacts = InteractionProfiler().profile_interactions(receptor, docked_lig)
-for c in contacts:
-    print(f"[{c.interaction_type}] {c.receptor_res}:{c.receptor_atom_name} <-> {c.query_atom_name} ({c.distance:.2f} Å)")
+InteractionVisualizer.render_interaction_diagram(
+    receptor=receptor,
+    query=docked_lig,
+    contacts=contacts,
+    output_png_path="interaction_map.png",
+    title="Protein-Ligand Interaction Map",
+    score_info={"total_score": top_pose.score, "metal_score": top_pose.score_breakdown.get("metal_score", 0.0)},
+)
+```
+
+### High-Throughput Virtual Screening
+
+```python
+from moldock import VirtualScreener, ScreeningReporter, DockingConfig, GridBox
+
+# 1. Configure binding site
+grid = GridBox(center_x=12.5, center_y=8.0, center_z=15.2, size_x=20.0, size_y=20.0, size_z=20.0)
+config = DockingConfig(grid=grid, exhaustiveness=4, num_modes=3)
+
+# 2. Initialize screener with 4 parallel worker threads
+screener = VirtualScreener(
+    receptor_pdb="receptor.pdb",
+    config=config,
+    score_cutoff=-5.0,
+    max_workers=4,
+)
+
+# 3. Screen multi-molecule SDF library
+campaign = screener.screen("library.sdf")
+
+# 4. Inspect leaderboard and export reports
+print(ScreeningReporter.generate_table(campaign, top_n=10))
+ScreeningReporter.export_csv(campaign, "results.csv")
+ScreeningReporter.export_hits_sdf(campaign, "top_hits.sdf", top_n=10)
+ScreeningReporter.render_dashboard(campaign, "dashboard.png")
 ```
 
 ### Protein-Protein Docking
@@ -237,5 +301,16 @@ result.export_poses_pdb("docked_partner_poses.pdb")
 python3 -m unittest discover -s tests -v
 ```
 
-All unit tests run in <1 second and validate PDB/PDBQT parsing, metal detection, Vina empirical scoring terms, and end-to-end docking pipelines.
+The test suite validates:
+- PDB, PDBQT, and SDF/MOL parsing and formatting
+- Metal co-factor detection and valency assignment
+- AutoDock Vina scoring potentials and coordination well calculations
+- Rotatable bond detection and planar 2D layout relaxation
+- Protein-ligand simulated annealing and virtual screening pipelines
+- 2D complete-ligand interaction image and 3D pocket projection generation
 
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
